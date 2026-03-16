@@ -298,7 +298,23 @@ WHERE inducted = 'Y'
 ) AS hof USING (playerid)
 
 -- 9. Find all players who had at least 1,000 hits for two different teams. Report those players' full names.
---
+
+WITH team_hits AS (
+SELECT 
+	playerid, 
+	teamid,
+	SUM(h),
+	namefirst || ' ' || namelast AS full_name
+FROM people p
+INNER JOIN batting USING(playerid)
+GROUP BY p.playerid, teamid, namefirst, namelast
+HAVING SUM(h) > 1000)
+
+SELECT full_name
+FROM team_hits 
+GROUP BY playerid, full_name
+HAVING COUNT(teamid) >=2;
+
 -- 10. Find all players who hit their career highest number of home runs in 2016. Consider only players who have played in the league for at least 10 years, and who hit at least one home run in 2016. Report the players' first and last names and the number of home runs they hit in 2016.
 --
 -- After finishing the above questions, here are some open-ended questions to consider.
