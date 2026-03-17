@@ -316,7 +316,36 @@ GROUP BY playerid, full_name
 HAVING COUNT(teamid) >=2;
 
 -- 10. Find all players who hit their career highest number of home runs in 2016. Consider only players who have played in the league for at least 10 years, and who hit at least one home run in 2016. Report the players' first and last names and the number of home runs they hit in 2016.
---
+
+WITH ten_year_exp AS(
+SELECT playerid, namefirst || ' ' || namelast AS full_name
+	FROM
+	people
+WHERE EXTRACT(YEAR FROM AGE(finalgame::date, debut::date)) >= 10
+),
+
+ten_year_2016_players AS(
+SELECT full_name, t.playerid, SUM(hr) AS total_2016_homeruns
+FROM ten_year_exp t
+INNER JOIN batting b
+ON t.playerid = b.playerid
+WHERE yearid = 2016
+GROUP BY t.playerid, full_name
+HAVING SUM(hr) >= 1
+),
+
+career_max AS(
+SELECT MAX(hr) AS max_hr, playerid
+FROM batting b
+GROUP BY playerid
+)
+
+SELECT ty.full_name, ty.total_2016_homeruns
+FROM ten_year_2016_players ty
+JOIN career_max cm
+ON ty.playerid = cm.playerid
+WHERE ty.total_2016_homeruns = cm.max_hr;
+
 -- After finishing the above questions, here are some open-ended questions to consider.
 --
 -- **Open-ended questions**
